@@ -1,0 +1,13 @@
+name = "ParallelArrays"
+uuid = "862b1c87-f07d-406f-9f31-85f9a7d9607f"
+authors = ["srinix <srinix@protonmail.com> and contributors"]
+version = "0.1.0"
+
+[compat]
+julia = "1.6"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
