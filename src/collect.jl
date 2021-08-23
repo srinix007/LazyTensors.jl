@@ -37,28 +37,32 @@ end
     dest
 end
 
-function threaded_copyto!(dest, bc)
+function threaded_copyto!(dest, bc, st=1, en=length(bc), nth=Threads.nthreads())
 
-    n = length(dest)
-    nth = Threads.nthreads()
-    chunk = n ÷ nth 
-    remainder = n % nth
-
-    @inbounds Threads.@threads for t in 1:nth
-        iter = ((t - 1) * chunk + 1):(t * chunk)
-        @inbounds @simd for i in eachindex(bc)[iter]
-            @inbounds dest[i] = bc[i]
-        end
+    if nth == 1
+        serial_copyto!(dest, bc, st, en)
+        return nothing
     end
 
-    nlast = nth * chunk
+    mid = (st + en) >>> 1
+    nth2 = nth >>> 1
 
-    @inbounds @simd for i in eachindex(bc)[nlast:end]
+    t = Threads.@spawn threaded_copyto!(dest, bc, st, mid, nth2)
+
+    threaded_copyto!(dest, bc, mid + 1, en, nth - nth2)
+
+    wait(t)
+
+    return nothing
+
+end
+
+function serial_copyto!(dest, bc, st, en)
+
+    @inbounds @simd for i in view(eachindex(bc), st:en)
         @inbounds dest[i] = bc[i]
     end
 
-
-    nothing
 end
 
 # For GPUArrays dispatch to default which will call the corresponding GPU functions
