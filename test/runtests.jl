@@ -2,7 +2,7 @@ using ParallelArrays
 using Test
 
 @testset "Serial Collect" begin
-    M = rand(200, 100)
+    M = rand(100, 100)
     v = rand(100)
     ML = LazyTensor(M)
     vl = LazyTensor(v)
