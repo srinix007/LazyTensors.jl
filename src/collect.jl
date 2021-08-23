@@ -39,9 +39,24 @@ end
 
 function threaded_copyto!(dest, bc)
 
-    @inbounds Threads.@threads for i in eachindex(bc)
+    n = length(dest)
+    nth = Threads.nthreads()
+    chunk = n ÷ nth 
+    remainder = n % nth
+
+    @inbounds Threads.@threads for t in 1:nth
+        iter = ((t - 1) * chunk + 1):(t * chunk)
+        @inbounds @simd for i in eachindex(bc)[iter]
+            @inbounds dest[i] = bc[i]
+        end
+    end
+
+    nlast = nth * chunk
+
+    @inbounds @simd for i in eachindex(bc)[nlast:end]
         @inbounds dest[i] = bc[i]
     end
+
 
     nothing
 end
