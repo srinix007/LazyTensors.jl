@@ -1,6 +1,6 @@
 module ParallelArrays
 
-export LazyTensor, unwrap, LazyTensorStyle, pev, ev
+export LazyTensor, unwrap, LazyTensorStyle, pev, ev, tsum, tprod, treduce
 
 struct LazyTensor{T,N,A <: AbstractArray{T,N}} <: DenseArray{T,N}
     dat::A
@@ -25,27 +25,6 @@ Base.BroadcastStyle(::LazyTensorStyle, ::Broadcast.BroadcastStyle) = LazyTensorS
 
 Base.materialize(bc::Broadcast.Broadcasted{LazyTensorStyle}) = bc
 
-"""
-    unwrap(bc::Broadcast.Broadcasted{LazyTensorStyle})
-
-Unwraps all LazyTensor objects to its parent in the Broadcast tree.
-
-# Examples
-
-```jldoctest
-julia> L = LazyTensor(rand(2,2));
-
-julia> typeof(L)
-LazyTensor{Float64, 2, Matrix{Float64}}
-
-julia> typeof(L .* 2.0)
-Base.Broadcast.Broadcasted{LazyTensorStyle, Nothing, typeof(*), Tuple{LazyTensor{Float64, 2, Matrix{Float64}}, Float64}}
-
-julia> typeof(unwrap(bc))
-Base.Broadcast.Broadcasted{Base.Broadcast.DefaultArrayStyle{2}, Nothing, typeof(*), Tuple{Matrix{Float64}, Float64}}
-```
-
-"""
 function unwrap(bc::Broadcast.Broadcasted{LazyTensorStyle})
     return Broadcast.broadcasted(bc.f, map(unwrap, bc.args)...)
 end
@@ -54,5 +33,6 @@ unwrap(x) = x
 unwrap(a::LazyTensor) = a.dat
 
 include("collect.jl")
+include("reduce.jl")
 
 end
