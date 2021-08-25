@@ -1,23 +1,23 @@
 using GPUArrays
 
-@inline vect(bc::Broadcast.Broadcasted{LazyTensorStyle}) = pev(bc)
+@inline Base.vect(bc::BroadcastArray) = pev(bc)
 
 """
-    ev(bc::Broadcast.Broadcasted{LazyTensorStyle}) 
+    ev(bc::BroadcastArray) 
 
 Evaluates the Broadcasted object serially.
 
 """
-@inline ev(bc::Broadcast.Broadcasted{LazyTensorStyle}) = LazyTensor(Base.materialize(unwrap(bc)))
+@inline ev(bc::BroadcastArray) = LazyTensor(Base.materialize(unwrap(bc)))
 
 """
-    pev(bc::Broadcast.Broadcasted{LazyTensorStyle}) 
+    pev(bc::BroadcastArray)
 
 Evaluates the Broadcasted object parallely in a device
 agnostic way. 
 
 """
-@inline pev(bc::Broadcast.Broadcasted{LazyTensorStyle}) = LazyTensor(threaded_materialize(unwrap(bc)))
+@inline pev(bc::BroadcastArray) = LazyTensor(threaded_materialize(unwrap(bc)))
 
 function threaded_materialize(bc::Broadcast.Broadcasted{<:Broadcast.AbstractArrayStyle})
     bci = Broadcast.instantiate(bc)
@@ -29,15 +29,16 @@ function threaded_materialize(bc::Broadcast.Broadcasted{<:Broadcast.AbstractArra
 
     threaded_copyto!(dest, bci)
 
-    return LazyTensor(dest)
+    return dest
 end
 
 @inline function Base.materialize!(dest, bc::Broadcast.Broadcasted{LazyTensorStyle})
-    threaded_copyto!(dest.dat, Broadcast.instantiate(unwrap(bc)))
+    threaded_copyto!(dest.dat, unwrap(bc))
     dest
 end
 
-function threaded_copyto!(dest, bc, st=1, en=length(bc), nth=Threads.nthreads())
+function threaded_copyto!(dest, bc::Broadcast.Broadcasted{<:Broadcast.AbstractArrayStyle},
+     st=1, en=length(bc), nth=Threads.nthreads())
 
     if nth == 1
         serial_copyto!(dest, bc, st, en)
@@ -69,7 +70,7 @@ end
 
 @inline threaded_materialize(bc::Broadcast.Broadcasted{<:AbstractGPUArrayStyle}) = LazyTensor(Base.materialize(bc))
 
-@inline threaded_materialize!(dest, bc::Broadcast.Broadcasted{<:AbstractGPUArrayStyle}) = Base.materialize!(bc)
+@inline threaded_copyto!(dest, bc::Broadcast.Broadcasted{<:AbstractGPUArrayStyle}) = Base.materialize!(bc)
 
 # Fallback: non-lazy arrays pev and ev behaves as identity function
 
