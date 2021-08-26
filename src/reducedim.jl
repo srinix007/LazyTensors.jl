@@ -1,11 +1,18 @@
 
+@inline Base._sum(A::BroadcastArray, dims) = sum(A, dims)
+@inline Base._prod(A::BroadcastArray, dims) = prod(A, dims)
+
 @inline Base.sum(A::BroadcastArray, dims) = reduce(+, A, dims)
 @inline Base.prod(A::BroadcastArray, dims) = reduce(*, A, dims)
 
-function Base.reduce(op::Function, A::BroadcastArray, dims)
+
+@inline Base.reduce(op::Function, A::BroadcastArray, dims) = serial_reducedim(op, A, dims)
+
+function serial_reducedim(op, A, dims)
     inval = initfun(typeof(op))(eltype(A))
     R = Base.reducedim_initarray(unwrap(A), dims, inval)
-    return serial_reducedim!(op, R, unwrap(A))
+    serial_reducedim!(op, R, unwrap(A))
+    return R
 end
 
 function serial_reducedim!(op, R, A)
