@@ -27,7 +27,7 @@ Base.BroadcastStyle(::Type{<:LazyTensor}) = LazyTensorStyle()
 
 Base.BroadcastStyle(::LazyTensorStyle, ::Broadcast.BroadcastStyle) = LazyTensorStyle() 
 
-Base.materialize(bc::Broadcast.Broadcasted{LazyTensorStyle}) = BroadcastArray(bc)
+Base.materialize(bc::Broadcast.Broadcasted{LazyTensorStyle}) = BroadcastArray(unwrap(bc))
 
 function Base.eltype(bc::Broadcast.Broadcasted)
     bci = Broadcast.instantiate(bc)
@@ -45,11 +45,15 @@ struct BroadcastArray{T,N,B <: Base.AbstractBroadcasted} <: AbstractArray{T,N}
     bc::B
 end
 
-function BroadcastArray(bc::Broadcast.Broadcasted{LazyTensorStyle})
-    bci = unwrap(bc)
+function BroadcastArray(bc::Broadcast.Broadcasted)
     T = eltype(bc)
     N = length(size(bc))
-    return BroadcastArray{T,N,typeof(bci)}(bci)
+    return BroadcastArray{T,N,typeof(bc)}(bc)
+end
+
+function BroadcastArray(g::Base.Generator)
+    bc = Broadcast.instantiate(Broadcast.broadcasted(g.f, g.iter))
+    return BroadcastArray(bc)
 end
 
 Base.getindex(b::BroadcastArray, i...) = b.bc[i...]
