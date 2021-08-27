@@ -2,7 +2,7 @@
 tsum(A, dims) = treduce(+, A, dims)
 tprod(A, dims) = treduce(*, A, dims)
 
-function treduce(op, A::AbstractArray{T}, dims) where {T}
+function treduce(op, A::AbstractArray, dims)
     rdims = Tuple(dims)
     lred = prod(size(A)[i] for i in rdims)
     lrem = length(A) - lred
@@ -17,6 +17,11 @@ function treduce(op, A::AbstractArray{T}, dims) where {T}
     end
     return dest
 end
+
+@inline treduce(op, A::AbstractGPUArray, dims) = reduce(op, A, dims=dims)
+@inline treduce(op,
+                A::BroadcastArray{T,N,<:Broadcast.Broadcasted{<:AbstractGPUArrayStyle}},
+                dims) where {T,N} = reduce(op, A.bc, dims=dims)
 
 function halve_dims(s, rdims) 
     maxid = argmax([s[i] for i in rdims])

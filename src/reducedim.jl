@@ -6,14 +6,16 @@
 @inline Base.prod(A::BroadcastArray, dims) = reduce(*, A, dims)
 
 
-@inline Base.reduce(op::Function, A::BroadcastArray, dims) = serial_reducedim(op, A, dims)
+@inline Base.reduce(op::Function, A::BroadcastArray, dims) = serial_reducedim(op, unwrap(A), dims)
 
 function serial_reducedim(op, A, dims)
     inval = initfun(typeof(op))(eltype(A))
-    R = Base.reducedim_initarray(unwrap(A), dims, inval)
-    serial_reducedim!(op, R, unwrap(A))
+    R = Base.reducedim_initarray(A, dims, inval)
+    serial_reducedim!(op, R, A)
     return R
 end
+
+@inline serial_reducedim(op, A::Broadcast.Broadcasted{<:AbstractGPUArrayStyle}, dims) = reduce(op, A, dims=dims)
 
 function serial_reducedim!(op, R, A)
 
