@@ -15,7 +15,6 @@ function serial_reduce(op, A, initval, iter=eachindex(A))
     return s
 end
 
-@inline serial_reduce(op, A::Broadcast.Broadcasted{<:AbstractGPUArrayStyle}, initval) = reduce(op, A)
 
 @inline Base.sum(A::BroadcastArray) = reduce(+, A)
 @inline Base.prod(A::BroadcastArray) = reduce(*, A)

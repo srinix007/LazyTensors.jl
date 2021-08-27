@@ -18,10 +18,6 @@ function treduce(op, A::AbstractArray, dims)
     return dest
 end
 
-@inline treduce(op, A::AbstractGPUArray, dims) = reduce(op, A, dims=dims)
-@inline treduce(op,
-                A::BroadcastArray{T,N,<:Broadcast.Broadcasted{<:AbstractGPUArrayStyle}},
-                dims) where {T,N} = reduce(op, A.bc, dims=dims)
 
 function halve_dims(s, rdims) 
     maxid = argmax([s[i] for i in rdims])

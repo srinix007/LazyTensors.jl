@@ -40,10 +40,7 @@ function threaded_reduce(op, A, nth=Threads.nthreads())
     op(threaded_reduce(op, A2, nth3), fetch(t))
 end
 
-@inline threaded_reduce(op,
-    A::BroadcastArray{T,N,<:Broadcast.Broadcasted{<:AbstractGPUArrayStyle}}) where {T,N} = reduce(op, A.bc)
 
-@inline threaded_reduce(op, A::AbstractGPUArray) = reduce(op, A)
 
 
 

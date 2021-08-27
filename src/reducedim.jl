@@ -15,8 +15,6 @@ function serial_reducedim(op, A, dims)
     return R
 end
 
-@inline serial_reducedim(op, A::Broadcast.Broadcasted{<:AbstractGPUArrayStyle}, dims) = reduce(op, A, dims=dims)
-
 function serial_reducedim!(op, R, A)
 
     isempty(A) && return R

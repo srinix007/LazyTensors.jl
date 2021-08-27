@@ -79,5 +79,6 @@ include("reduce.jl")
 include("reducedim.jl")
 include("treduce.jl")
 include("treducedim.jl")
+include("GPU.jl")
 
 end

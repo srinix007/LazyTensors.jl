@@ -1,4 +1,3 @@
-using GPUArrays
 
 @inline Base.vect(bc::BroadcastArray) = pev(bc)
 
@@ -65,12 +64,6 @@ function serial_copyto!(dest, bc, st, en)
     end
 
 end
-
-# For GPUArrays dispatch to default which will call the corresponding GPU functions
-
-@inline threaded_materialize(bc::Broadcast.Broadcasted{<:AbstractGPUArrayStyle}) = LazyTensor(Base.materialize(bc))
-
-@inline threaded_copyto!(dest, bc::Broadcast.Broadcasted{<:AbstractGPUArrayStyle}) = Base.materialize!(bc)
 
 # Fallback: non-lazy arrays pev and ev behaves as identity function
 
