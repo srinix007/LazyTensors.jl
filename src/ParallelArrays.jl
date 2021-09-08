@@ -72,7 +72,6 @@ unwrap(a::BroadcastArray) = a.bc
 
 function Base.show(io::IO, ::MIME"text/plain", ba::BroadcastArray)
     println("$(size(ba)) BroadcastArray{$(eltype(ba)), $(ndims(ba))}")
-    println(dimnames(ba))
     println(" ")
     println(size.(ba.bc.args))
 end
