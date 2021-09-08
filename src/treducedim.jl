@@ -15,7 +15,7 @@ function treduce(op, A::AbstractArray, dims)
         threaded_reducedim!(op, dest, A, rdims, dest_dims(A, rdims))
         res = dest
     end
-    return dest
+    return LazyTensor(res)
 end
 
 

@@ -1,6 +1,8 @@
 module ParallelArrays
 
-export LazyTensor, BroadcastArray, unwrap, LazyTensorStyle,
+using GPUArrays
+
+export LazyTensor, BroadcastArray, unwrap, LazyTensorStyle, 
  pev, ev, reduce, tsum, tprod, treduce, halve_dims, halve
 
 struct LazyTensor{T,N,A <: AbstractArray{T,N}} <: DenseArray{T,N}
@@ -70,6 +72,7 @@ unwrap(a::BroadcastArray) = a.bc
 
 function Base.show(io::IO, ::MIME"text/plain", ba::BroadcastArray)
     println("$(size(ba)) BroadcastArray{$(eltype(ba)), $(ndims(ba))}")
+    println(dimnames(ba))
     println(" ")
     println(size.(ba.bc.args))
 end
