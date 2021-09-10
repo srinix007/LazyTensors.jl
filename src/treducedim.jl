@@ -2,10 +2,11 @@
 tsum(A, dims) = treduce(+, A, dims)
 tprod(A, dims) = treduce(*, A, dims)
 
-function treduce(op, A::AbstractArray, dims, minsize=1000)
+function treduce(op, A::AbstractArray, dims, minsize=10000)
     sa = size(A)
     sr = prod(sa[i] for i in dims)
     sr = length(A) - sr
+    sr = Threads.nthreads() * sr
 
     if ndims(A) in dims && sr < minsize
         return threaded_reducedim(op, A, dims)
