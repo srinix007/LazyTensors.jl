@@ -54,16 +54,6 @@ end
     end
 end
 
-@testset "Halve Array" begin
-    @testset "Cartesian Indices" begin
-        iter = [CartesianIndices(s) for s in [(10, 9, 8, 4), (9, 65, 32, 23), (56, 33, 456)]]
-
-       @test halve_dims(iter[1]) == ([1:5, 1:9, 1:8, 1:4], [6:10, 1:9, 1:8, 1:4])
-       @test halve_dims(iter[2]) == ([1:9, 1:32, 1:32, 1:23], [1:9, 33:65, 1:32, 1:23])
-       @test halve_dims(iter[3]) == ([1:56, 1:33, 1:228], [1:56, 1:33, 229:456])
-    end
-end
-
 @testset verbose = true "Parallel Reduce" begin
     if Threads.nthreads() > 1
 
@@ -86,6 +76,25 @@ end
     end
 end
 
+@testset verbose = true "Serial reducedim $dims" for dims in (1, 2, 3, (1, 2), (2, 3), (1, 3))
+        
+        M = rand(100, 500, 400)
+        v = rand(100)
+        ML = LazyTensor(M)
+        vl = LazyTensor(v)
+
+        @testset "Array" begin
+            @test ParallelArrays.serial_reducedim(+, M .* v, dims) ≈  sum(M .* v, dims=dims)
+            @test ParallelArrays.serial_reducedim(+, M .* 2.0, dims) ≈  sum(M .* 2.0, dims=dims)
+        end
+
+        @testset "Broadcast" begin
+            @test ParallelArrays.serial_reducedim(+, ML .* vl, dims) ≈  sum(M .* v, dims=dims)
+            @test ParallelArrays.serial_reducedim(+, ML .* 2.0, dims) ≈  sum(M .* 2.0, dims=dims)
+        end
+
+end
+
 @testset verbose = true "Parallel reducedim $dims" for dims in (1, 2, 3, (1, 2), (2, 3), (1, 3))
     if Threads.nthreads() > 1
         
@@ -94,44 +103,15 @@ end
         ML = LazyTensor(M)
         vl = LazyTensor(v)
 
-    @testset "Split reduce" begin
-
         @testset "Array" begin
-            @test ParallelArrays.threaded_reducedim_r(+, M .* v, dims) ≈  sum(M .* v, dims=dims)
-            @test ParallelArrays.threaded_reducedim_r(+, M .* 2.0, dims) ≈  sum(M .* 2.0, dims=dims)
-        end
-
-        @testset "Broadcast" begin
-            @test ParallelArrays.threaded_reducedim_r(+, ML .* vl, dims) ≈  sum(M .* v, dims=dims)
-            @test ParallelArrays.threaded_reducedim_r(+, ML .* 2.0, dims) ≈  sum(M .* 2.0, dims=dims)
-        end
-
-    end
-
-    @testset "Split map" begin
-
-        R = Base.reducedim_initarray(M, dims, 0.0)
-        mdims = ParallelArrays.dest_dims(M, dims)
-
-        @testset "Array" begin
-            ParallelArrays.threaded_reducedim!(+, R, M .* v, dims, mdims)
-            @test R ≈  sum(M .* v, dims=dims)
-
-            R .= 0.0
-            ParallelArrays.threaded_reducedim!(+, R, M .* 2.0, dims, mdims) 
-            @test R ≈  sum(M .* 2.0, dims=dims)
-        end
-
-        @testset "Broadcast" begin
-            R .= 0.0
-            ParallelArrays.threaded_reducedim!(+, R, ML .* vl, dims, mdims)
-            @test R ≈  sum(M .* v, dims=dims)
-
-            R .= 0.0
-            ParallelArrays.threaded_reducedim!(+, R, ML .* 2.0, dims, mdims)
-            @test R ≈  sum(M .* 2.0, dims=dims)
+            @test tsum(M .* v, dims) ≈  sum(M .* v, dims=dims)
+            @test tsum(M .* 2.0, dims) ≈  sum(M .* 2.0, dims=dims)
         end
         
+        @testset "Broadcast" begin
+            @test tsum(ML .* vl, dims) ≈  sum(M .* v, dims=dims)
+            @test tsum(ML .* 2.0, dims) ≈  sum(M .* 2.0, dims=dims)
+        end
+
     end
-end
 end

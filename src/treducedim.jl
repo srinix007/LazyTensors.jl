@@ -2,69 +2,86 @@
 tsum(A, dims) = treduce(+, A, dims)
 tprod(A, dims) = treduce(*, A, dims)
 
-function treduce(op, A::AbstractArray, dims)
-    rdims = Tuple(dims)
-    lred = prod(size(A)[i] for i in rdims)
-    lrem = length(A) - lred
+function treduce(op, A::AbstractArray, dims, minsize=1000)
+    sa = size(A)
+    sr = prod(sa[i] for i in dims)
+    sr = length(A) - sr
 
-    if lred < min(1000, lrem)
-        res = threaded_reducedim_r(op, A, rdims)
+    if ndims(A) in dims && sr < minsize
+        return threaded_reducedim(op, A, dims)
     else
         initval = initfun(typeof(op))(eltype(A))
-        dest = Base.reducedim_initarray(A, rdims, initval)
-        threaded_reducedim!(op, dest, A, rdims, dest_dims(A, rdims))
-        res = dest
+        R = Base.reducedim_initarray(A, dims, initval)
+        threaded_reducedim!(op, R, A)
+        return R
     end
-    return LazyTensor(res)
 end
 
+function halve_dest(R, A)
+    rdims = size(R)
+    adims = size(A)
 
-function halve_dims(s, rdims) 
-    maxid = argmax([s[i] for i in rdims])
-    maxid = rdims[maxid]
-    idx = [1:i for i in s]
-    mid = s[maxid] >> 1
-    idx[maxid] = 1:mid
-    midx = copy(idx)
-    idx[maxid] = (mid+1):s[maxid]
-    return midx, idx
+    ldim = findlast(x -> x != 1, size(R))
+
+    mid = rdims[ldim] >> 1
+
+    rmidx = [1:i for i in rdims]
+    renx = [1:i for i in rdims]
+
+    amidx = [1:i for i in adims]
+    aenx = [1:i for i in adims]
+
+    rmidx[ldim] = 1:mid
+    renx[ldim] = (mid + 1):rdims[ldim]
+
+    amidx[ldim] = 1:mid
+    aenx[ldim] = (mid + 1):adims[ldim]
+
+    return view(R, rmidx...), view(R, renx...), view(A, amidx...), view(A, aenx...)
 end
 
-function halve(A::AbstractArray, rdims)
-    idx1, idx2 = halve_dims(size(A), rdims)
-    return view(A, idx1...), view(A, idx2...)
-end
+function halve_last(A)
+    adims = size(A)
 
-function threaded_reducedim_r(op, A, rdims, nth=Threads.nthreads())
+    amidx = [1:i for i in adims]
+    aenx = [1:i for i in adims]
     
-    if nth == 1
-        dest = serial_reducedim(op, A, rdims)
-        return dest
-    end
+    mid = adims[end] >> 1
 
-    A1, A2 = halve(A, rdims)
-    nth2 = nth >> 1
-    t = Threads.@spawn threaded_reducedim_r(op, A1, rdims, nth2)
-    nth3 = nth - nth2
-    op.(threaded_reducedim_r(op, A2, rdims, nth3), fetch(t))
+    amidx[end] = 1:mid
+    aenx[end] = (mid + 1):adims[end]
+
+    return view(A, amidx...), view(A, aenx...)
 end
 
-dest_dims(A, dims) = Tuple(i for i in 1:length(size(A)) if !(i in dims))
+function threaded_reducedim!(op, R, A, nth=Threads.nthreads())
 
-function threaded_reducedim!(op, dest, A, rdims, dest_dims, nth=Threads.nthreads())
-    
     if nth == 1
-        serial_reducedim!(op, dest, A)
+        serial_reducedim!(op, R, A)
         return nothing
     end
 
-    D1, D2 = halve(dest, dest_dims)
-    A1, A2 = halve(A, dest_dims)
+    R1, R2, A1, A2 = halve_dest(R, A)
     nth2 = nth >> 1
-    t = Threads.@spawn threaded_reducedim!(op, D1, A1, rdims, dest_dims, nth2)
-    nth3 = nth - nth2
-    threaded_reducedim!(op, D2, A2, rdims, dest_dims, nth3)
-    wait(t)
 
+    t = Threads.@spawn threaded_reducedim!(op, R1, A1, nth2)
+
+    threaded_reducedim!(op, R2, A2, nth - nth2)
+
+    wait(t)
     return nothing
+end
+
+function threaded_reducedim(op, A, dims, nth=Threads.nthreads())
+
+    if nth == 1
+        return serial_reducedim(op, A, dims)
+    end
+
+    A1, A2 = halve_last(A)
+    nth2 = nth >> 1
+
+    t = Threads.@spawn threaded_reducedim(op, A1, dims, nth2)
+
+    op.(threaded_reducedim(op, A2, dims, nth - nth2), fetch(t))
 end

@@ -17,8 +17,6 @@ end
 
 function serial_reducedim!(op, R, A)
 
-    isempty(A) && return R
-
     indsAt, indsRt = Base.safe_tail(axes(A)), Base.safe_tail(axes(R))
     keep, Idefault = Broadcast.shapeindexer(indsRt)
 
@@ -40,5 +38,5 @@ function serial_reducedim!(op, R, A)
             end
         end
     end
-    return R 
+    return nothing
 end
