@@ -113,5 +113,18 @@ end
             @test tsum(ML .* 2.0, dims) ≈  sum(M .* 2.0, dims=dims)
         end
 
+        if ndims(M) in dims
+
+            @testset "Aggregate Array" begin
+                @test ParallelArrays.threaded_reducedim(+, M .* v, dims) ≈  sum(M .* v, dims=dims)
+                @test ParallelArrays.threaded_reducedim(+, M .* 2.0, dims) ≈  sum(M .* 2.0, dims=dims)
+            end
+            
+            @testset "Aggregate Broadcast" begin
+                @test ParallelArrays.threaded_reducedim(+, ML .* vl, dims) ≈  sum(M .* v, dims=dims)
+                @test ParallelArrays.threaded_reducedim(+, ML .* 2.0, dims) ≈  sum(M .* 2.0, dims=dims)
+            end
+        end
+
     end
 end
