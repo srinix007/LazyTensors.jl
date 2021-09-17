@@ -6,7 +6,7 @@
 @inline Base.prod(A::BroadcastArray, dims) = reduce(*, A, dims)
 
 
-@inline Base.reduce(op::Function, A::BroadcastArray, dims) = serial_reducedim(op, unwrap(A), dims)
+@inline Base.reduce(op::Function, A::BroadcastArray, dims) = LazyTensor(serial_reducedim(op, unwrap(A), dims))
 
 function serial_reducedim(op, A, dims)
     inval = initfun(typeof(op))(eltype(A))
