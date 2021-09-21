@@ -7,7 +7,7 @@
 Evaluates the Broadcasted object serially.
 
 """
-@inline ev(bc::BroadcastArray) = LazyTensor(Base.materialize(unwrap(bc)))
+@inline ev(bc::BroadcastArray) = Base.materialize(unwrap(bc))
 
 """
     pev(bc::BroadcastArray)
@@ -16,7 +16,7 @@ Evaluates the Broadcasted object parallely in a device
 agnostic way. 
 
 """
-@inline pev(bc::BroadcastArray) = LazyTensor(threaded_materialize(unwrap(bc)))
+@inline pev(bc::BroadcastArray) = threaded_materialize(unwrap(bc))
 
 function threaded_materialize(bc::Broadcast.Broadcasted{<:Broadcast.AbstractArrayStyle})
     bci = Broadcast.instantiate(bc)
