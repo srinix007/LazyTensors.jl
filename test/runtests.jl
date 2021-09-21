@@ -40,16 +40,25 @@ end
 end
 
 @testset verbose = true "Serial Partial reduce" begin
-    @testset "Serial reduce $dims" for dims in 1:2 
-        M = rand(1000, 500)
-        v = rand(1000)
+    @testset "Serial reduce $dims" for dims in (1, 2, 3, (1, 2), (2, 3), (1, 3))
+        M = rand(100, 500, 100)
+        v = rand(100)
         ML = LazyTensor(M)
         vl = LazyTensor(v)
 
         @test sum(ML .* vl, dims) ≈  dropdims(sum(M .* v, dims=dims), dims=dims)
-        @test sum(ML .* vl, dims) ≈  dropdims(sum(M .* v, dims=dims), dims=dims)
         @test sum(ML .* 2.0, dims) ≈  dropdims(sum(M .* 2.0, dims=dims), dims=dims)
         @test sum(ML .* 2.0 .+ vl, dims) ≈  dropdims(sum(M .* 2.0 .+ v, dims=dims), dims=dims)
+
+        R = Base.reducedim_initarray(M, dims, zero(eltype(M)))
+        sum!(R, ML .* vl) 
+        @test R ≈  sum(M .* v, dims=dims)
+        R = Base.reducedim_initarray(M, dims, zero(eltype(M)))
+        sum!(R, ML .* 2.0)
+        @test R ≈ sum(M .* 2.0, dims=dims)
+        R = Base.reducedim_initarray(M, dims, zero(eltype(M)))
+        sum!(R, ML .* 2.0 .+ vl)
+        @test R ≈ sum(M .* 2.0 .+ v, dims=dims)
 
     end
 end
@@ -113,6 +122,24 @@ end
             @test tsum(ML .* 2.0, dims) ≈  dropdims(sum(M .* 2.0, dims=dims), dims=dims)
         end
 
+        @testset "Array inplace" begin
+            R = Base.reducedim_initarray(M, dims, zero(eltype(M)))
+            tsum!(R, M .* v)
+            @test R ≈  sum(M .* v, dims=dims)
+            R = Base.reducedim_initarray(M, dims, zero(eltype(M)))
+            tsum!(R, M .* 2.0)
+            @test R ≈ sum(M .* 2.0, dims=dims)
+        end
+
+        @testset "Broadcast inplace" begin
+            R = Base.reducedim_initarray(M, dims, zero(eltype(M)))
+            tsum!(R, ML .* vl)
+            @test R ≈  sum(M .* v, dims=dims)
+            R = Base.reducedim_initarray(M, dims, zero(eltype(M)))
+            tsum!(R, ML .* 2.0)
+            @test R ≈ sum(M .* 2.0, dims=dims)
+        end
+        
         if ndims(M) in dims
 
             @testset "Aggregate Array" begin
@@ -125,6 +152,7 @@ end
                 @test ParallelArrays.threaded_reducedim(+, ML .* 2.0, dims) ≈  dropdims(sum(M .* 2.0, dims=dims), dims=dims)
             end
         end
+
 
     end
 end

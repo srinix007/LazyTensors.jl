@@ -3,7 +3,7 @@ module ParallelArrays
 using GPUArrays
 
 export LazyTensor, BroadcastArray, unwrap, LazyTensorStyle, 
- pev, ev, reduce, tsum, tprod, treduce, halve_dims, halve
+ pev, ev, reduce, reduce!, sum!, prod!, tsum, tprod, tsum!, tprod!, treduce!, treduce, halve_dims, halve
 
 struct LazyTensor{T,N,A <: AbstractArray{T,N}} <: DenseArray{T,N}
     dat::A
