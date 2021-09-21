@@ -50,15 +50,15 @@ end
         @test sum(ML .* 2.0, dims) ≈  dropdims(sum(M .* 2.0, dims=dims), dims=dims)
         @test sum(ML .* 2.0 .+ vl, dims) ≈  dropdims(sum(M .* 2.0 .+ v, dims=dims), dims=dims)
 
-        R = Base.reducedim_initarray(M, dims, zero(eltype(M)))
-        sum!(R, ML .* vl) 
-        @test R ≈  sum(M .* v, dims=dims)
-        R = Base.reducedim_initarray(M, dims, zero(eltype(M)))
-        sum!(R, ML .* 2.0)
-        @test R ≈ sum(M .* 2.0, dims=dims)
-        R = Base.reducedim_initarray(M, dims, zero(eltype(M)))
-        sum!(R, ML .* 2.0 .+ vl)
-        @test R ≈ sum(M .* 2.0 .+ v, dims=dims)
+        R = dropdims(Base.reducedim_initarray(M, dims, zero(eltype(M))), dims=dims)
+        sum!(R, ML .* vl, dims) 
+        @test R ≈  dropdims(sum(M .* v, dims=dims), dims=dims)
+        R = dropdims(Base.reducedim_initarray(M, dims, zero(eltype(M))), dims=dims)
+        sum!(R, ML .* 2.0, dims)
+        @test R ≈ dropdims(sum(M .* 2.0, dims=dims), dims=dims)
+        R = dropdims(Base.reducedim_initarray(M, dims, zero(eltype(M))), dims=dims)
+        sum!(R, ML .* 2.0 .+ vl, dims)
+        @test R ≈ dropdims(sum(M .* 2.0 .+ v, dims=dims), dims=dims)
 
     end
 end
@@ -123,26 +123,26 @@ end
         end
 
         @testset "Array inplace" begin
-            R = Base.reducedim_initarray(M, dims, zero(eltype(M)))
-            tsum!(R, M .* v)
-            @test R ≈  sum(M .* v, dims=dims)
-            R = Base.reducedim_initarray(M, dims, zero(eltype(M)))
-            tsum!(R, M .* 2.0)
-            @test R ≈ sum(M .* 2.0, dims=dims)
+            R = dropdims(Base.reducedim_initarray(M, dims, zero(eltype(M))), dims=dims)
+            tsum!(R, M .* v, dims)
+            @test R ≈  dropdims(sum(M .* v, dims=dims), dims=dims)
+            R = dropdims(Base.reducedim_initarray(M, dims, zero(eltype(M))), dims=dims)
+            tsum!(R, M .* 2.0, dims)
+            @test R ≈ dropdims(sum(M .* 2.0, dims=dims), dims=dims)
         end
 
         @testset "Broadcast inplace" begin
-            R = Base.reducedim_initarray(M, dims, zero(eltype(M)))
-            tsum!(R, ML .* vl)
-            @test R ≈  sum(M .* v, dims=dims)
-            R = Base.reducedim_initarray(M, dims, zero(eltype(M)))
-            tsum!(R, ML .* 2.0)
-            @test R ≈ sum(M .* 2.0, dims=dims)
+            R = dropdims(Base.reducedim_initarray(M, dims, zero(eltype(M))), dims=dims)
+            tsum!(R, ML .* vl, dims)
+            @test R ≈  dropdims(sum(M .* v, dims=dims), dims=dims)
+            R = dropdims(Base.reducedim_initarray(M, dims, zero(eltype(M))), dims=dims)
+            tsum!(R, ML .* 2.0, dims)
+            @test R ≈ dropdims(sum(M .* 2.0, dims=dims), dims=dims)
         end
         
         if ndims(M) in dims
 
-            @testset "Aggregate Array" begin
+        @testset "Aggregate Array" begin
                 @test ParallelArrays.threaded_reducedim(+, M .* v, dims) ≈  dropdims(sum(M .* v, dims=dims), dims=dims)
                 @test ParallelArrays.threaded_reducedim(+, M .* 2.0, dims) ≈  dropdims(sum(M .* 2.0, dims=dims), dims=dims)
             end

@@ -2,13 +2,17 @@
 tsum(A, dims) = treduce(+, A, dims)
 tprod(A, dims) = treduce(*, A, dims)
 
-tsum!(R, A) = treduce!(+, R, A)
-tprod!(R, A) = treduce!(*, R, A)
+tsum!(R, A, dims) = treduce!(+, R, A, dims)
+tprod!(R, A, dims) = treduce!(*, R, A, dims)
 
 @inline treduce(op, A::AbstractArray, dims) = treduce_impl(op, A, dims)
 @inline treduce(op, A::BroadcastArray, dims) = treduce_impl(op, A, dims)
 
-@inline treduce!(op, R::AbstractArray, A::AbstractArray) = threaded_reducedim!(op, R, A)
+function treduce!(op::Function, R::AbstractArray, A::AbstractArray, dims)
+    Rs = reshape(R, Base.reduced_indices(A, dims))
+    threaded_reducedim!(op, Rs, A)
+    return nothing
+end
 
 function treduce_impl(op, A::AbstractArray, dims, minsize=10_000_000)
     sa = size(A)
