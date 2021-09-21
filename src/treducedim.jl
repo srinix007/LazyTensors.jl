@@ -17,7 +17,7 @@ function treduce_impl(op, A::AbstractArray, dims, minsize=10_000_000)
         initval = initfun(typeof(op))(eltype(A))
         R = Base.reducedim_initarray(A, dims, initval)
         threaded_reducedim!(op, R, A)
-        return R
+        return dropdims(R, dims=dims)
     end
 end
 

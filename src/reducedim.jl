@@ -12,7 +12,7 @@ function serial_reducedim(op, A, dims)
     inval = initfun(typeof(op))(eltype(A))
     R = Base.reducedim_initarray(A, dims, inval)
     serial_reducedim!(op, R, A)
-    return R
+    return dropdims(R, dims=dims)
 end
 
 function serial_reducedim!(op, R, A)

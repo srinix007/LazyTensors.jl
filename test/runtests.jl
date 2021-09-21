@@ -46,10 +46,10 @@ end
         ML = LazyTensor(M)
         vl = LazyTensor(v)
 
-        @test sum(ML .* vl, dims) ≈  sum(M .* vl, dims=dims)
-        @test sum(ML .* vl, dims) ≈  sum(M .* vl, dims=dims)
-        @test sum(ML .* 2.0, dims) ≈  sum(M .* 2.0, dims=dims)
-        @test sum(ML .* 2.0 .+ vl, dims) ≈  sum(M .* 2.0 .+ v, dims=dims)
+        @test sum(ML .* vl, dims) ≈  dropdims(sum(M .* v, dims=dims), dims=dims)
+        @test sum(ML .* vl, dims) ≈  dropdims(sum(M .* v, dims=dims), dims=dims)
+        @test sum(ML .* 2.0, dims) ≈  dropdims(sum(M .* 2.0, dims=dims), dims=dims)
+        @test sum(ML .* 2.0 .+ vl, dims) ≈  dropdims(sum(M .* 2.0 .+ v, dims=dims), dims=dims)
 
     end
 end
@@ -84,13 +84,13 @@ end
         vl = LazyTensor(v)
 
         @testset "Array" begin
-            @test ParallelArrays.serial_reducedim(+, M .* v, dims) ≈  sum(M .* v, dims=dims)
-            @test ParallelArrays.serial_reducedim(+, M .* 2.0, dims) ≈  sum(M .* 2.0, dims=dims)
+            @test ParallelArrays.serial_reducedim(+, M .* v, dims) ≈  dropdims(sum(M .* v, dims=dims), dims=dims)
+            @test ParallelArrays.serial_reducedim(+, M .* 2.0, dims) ≈  dropdims(sum(M .* 2.0, dims=dims), dims=dims)
         end
 
         @testset "Broadcast" begin
-            @test ParallelArrays.serial_reducedim(+, ML .* vl, dims) ≈  sum(M .* v, dims=dims)
-            @test ParallelArrays.serial_reducedim(+, ML .* 2.0, dims) ≈  sum(M .* 2.0, dims=dims)
+            @test ParallelArrays.serial_reducedim(+, ML .* vl, dims) ≈  dropdims(sum(M .* v, dims=dims), dims=dims)
+            @test ParallelArrays.serial_reducedim(+, ML .* 2.0, dims) ≈  dropdims(sum(M .* 2.0, dims=dims), dims=dims)
         end
 
 end
@@ -104,25 +104,25 @@ end
         vl = LazyTensor(v)
 
         @testset "Array" begin
-            @test tsum(M .* v, dims) ≈  sum(M .* v, dims=dims)
-            @test tsum(M .* 2.0, dims) ≈  sum(M .* 2.0, dims=dims)
+            @test tsum(M .* v, dims) ≈  dropdims(sum(M .* v, dims=dims), dims=dims)
+            @test tsum(M .* 2.0, dims) ≈  dropdims(sum(M .* 2.0, dims=dims), dims=dims)
         end
         
         @testset "Broadcast" begin
-            @test tsum(ML .* vl, dims) ≈  sum(M .* v, dims=dims)
-            @test tsum(ML .* 2.0, dims) ≈  sum(M .* 2.0, dims=dims)
+            @test tsum(ML .* vl, dims) ≈  dropdims(sum(M .* v, dims=dims), dims=dims)
+            @test tsum(ML .* 2.0, dims) ≈  dropdims(sum(M .* 2.0, dims=dims), dims=dims)
         end
 
         if ndims(M) in dims
 
             @testset "Aggregate Array" begin
-                @test ParallelArrays.threaded_reducedim(+, M .* v, dims) ≈  sum(M .* v, dims=dims)
-                @test ParallelArrays.threaded_reducedim(+, M .* 2.0, dims) ≈  sum(M .* 2.0, dims=dims)
+                @test ParallelArrays.threaded_reducedim(+, M .* v, dims) ≈  dropdims(sum(M .* v, dims=dims), dims=dims)
+                @test ParallelArrays.threaded_reducedim(+, M .* 2.0, dims) ≈  dropdims(sum(M .* 2.0, dims=dims), dims=dims)
             end
             
             @testset "Aggregate Broadcast" begin
-                @test ParallelArrays.threaded_reducedim(+, ML .* vl, dims) ≈  sum(M .* v, dims=dims)
-                @test ParallelArrays.threaded_reducedim(+, ML .* 2.0, dims) ≈  sum(M .* 2.0, dims=dims)
+                @test ParallelArrays.threaded_reducedim(+, ML .* vl, dims) ≈  dropdims(sum(M .* v, dims=dims), dims=dims)
+                @test ParallelArrays.threaded_reducedim(+, ML .* 2.0, dims) ≈  dropdims(sum(M .* 2.0, dims=dims), dims=dims)
             end
         end
 
