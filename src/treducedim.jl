@@ -3,7 +3,7 @@ tsum(A, dims) = treduce(+, A, dims)
 tprod(A, dims) = treduce(*, A, dims)
 
 @inline treduce(op, A::AbstractArray, dims) = treduce_impl(op, A, dims)
-@inline treduce(op, A::BroadcastArray, dims) = LazyTensor(treduce_impl(op, A, dims))
+@inline treduce(op, A::BroadcastArray, dims) = treduce_impl(op, A, dims)
 
 function treduce_impl(op, A::AbstractArray, dims, minsize=10_000_000)
     sa = size(A)
