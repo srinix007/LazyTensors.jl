@@ -3,9 +3,9 @@ using GPUArrays
 # For GPUArrays dispatch to Base methods which will call the corresponding GPU methods
 
 
-@inline threaded_materialize(bc::Broadcast.Broadcasted{<:AbstractGPUArrayStyle}) = LazyTensor(Base.materialize(bc))
+@inline threaded_materialize(bc::Broadcast.Broadcasted{<:AbstractGPUArrayStyle}) = Base.materialize(bc)
 
-@inline threaded_copyto!(dest, bc::Broadcast.Broadcasted{<:AbstractGPUArrayStyle}) = Base.materialize!(bc)
+@inline threaded_copyto!(dest, bc::Broadcast.Broadcasted{<:AbstractGPUArrayStyle}) = Base.materialize!(dest, bc)
 
 @inline serial_reduce(op, A::Broadcast.Broadcasted{<:AbstractGPUArrayStyle}, initval) = reduce(op, A)
 
@@ -19,3 +19,29 @@ using GPUArrays
 @inline threaded_reduce(op, A::AbstractGPUArray) = reduce(op, A)
 @inline threaded_reduce(op,
     A::BroadcastArray{T,N,<:Broadcast.Broadcasted{<:AbstractGPUArrayStyle}}) where {T,N} = reduce(op, A.bc)
+
+function sum!(R::AbstractGPUArray, 
+              A::BroadcastArray{T,N,<:Broadcast.Broadcasted{<:AbstractGPUArrayStyle}}, dims) where {T,N}
+    Rs = reshape(R, Base.reduced_indices(A, dims))
+    sum!(Rs, A.bc)
+    return nothing
+end
+
+function sum!(R::AbstractGPUArray, A::AbstractGPUArray, dims)
+    Rs = reshape(R, Base.reduced_indices(A, dims))
+    sum!(Rs, A)
+    return nothing
+end
+
+function prod!(R::AbstractGPUArray,
+               A::BroadcastArray{T,N,<:Broadcast.Broadcasted{<:AbstractGPUArrayStyle}}, dims) where {T,N}
+    Rs = reshape(R, Base.reduced_indices(A, dims))
+    prod!(Rs, A.bc)
+    return nothing
+end
+
+function prod!(R::AbstractGPUArray, A::AbstractGPUArray, dims)
+    Rs = reshape(R, Base.reduced_indices(A, dims))
+    prod!(Rs, A)
+    return nothing
+end
