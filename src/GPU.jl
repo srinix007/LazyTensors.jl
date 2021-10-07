@@ -20,27 +20,27 @@ using GPUArrays
 @inline threaded_reduce(op,
     A::BroadcastArray{T,N,<:Broadcast.Broadcasted{<:AbstractGPUArrayStyle}}) where {T,N} = reduce(op, A.bc)
 
-function sum!(R::AbstractGPUArray, 
+function Base.sum!(R::AbstractGPUArray, 
               A::BroadcastArray{T,N,<:Broadcast.Broadcasted{<:AbstractGPUArrayStyle}}, dims) where {T,N}
     Rs = reshape(R, Base.reduced_indices(A, dims))
     sum!(Rs, A.bc)
     return nothing
 end
 
-function sum!(R::AbstractGPUArray, A::AbstractGPUArray, dims)
+function Base.sum!(R::AbstractGPUArray, A::AbstractGPUArray, dims)
     Rs = reshape(R, Base.reduced_indices(A, dims))
     sum!(Rs, A)
     return nothing
 end
 
-function prod!(R::AbstractGPUArray,
+function Base.prod!(R::AbstractGPUArray,
                A::BroadcastArray{T,N,<:Broadcast.Broadcasted{<:AbstractGPUArrayStyle}}, dims) where {T,N}
     Rs = reshape(R, Base.reduced_indices(A, dims))
     prod!(Rs, A.bc)
     return nothing
 end
 
-function prod!(R::AbstractGPUArray, A::AbstractGPUArray, dims)
+function Base.prod!(R::AbstractGPUArray, A::AbstractGPUArray, dims)
     Rs = reshape(R, Base.reduced_indices(A, dims))
     prod!(Rs, A)
     return nothing
