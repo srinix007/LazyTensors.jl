@@ -2,21 +2,22 @@ module ParallelArrays
 
 using GPUArrays
 
-export LazyTensor, BroadcastArray, unwrap, LazyTensorStyle, 
- pev, ev, reduce, reduce!, sum!, prod!, tsum, tprod, tsum!, tprod!, treduce!, treduce, halve_dims, halve
+export LazyTensor, BroadcastArray, unwrap, LazyTensorStyle, pev, ev, reduce, reduce!, sum!,
+       prod!, tsum, tprod, tsum!, tprod!, treduce!, treduce, halve_dims, halve
 
-struct LazyTensor{T,N,A <: AbstractArray{T,N}} <: DenseArray{T,N}
+struct LazyTensor{T,N,A<:AbstractArray{T,N}} <: DenseArray{T,N}
     dat::A
+    LazyTensor(a::AbstractArray{T,N}) where {T,N} = new{T,N,typeof(a)}(a)
 end
 
-LazyTensor(a::AbstractArray{T,N}) where {T,N} = LazyTensor{T,N,typeof(a)}(a)
 @inline LazyTensor(a) = a
 
 Base.parent(a::LazyTensor) = a.dat
 
 Base.size(a::LazyTensor) = size(a.dat)
 Base.getindex(a::LazyTensor, i...) = LazyTensor(a.dat[i...])
-function Base.getindex(a::LazyTensor, I::Vararg{Union{<:AbstractUnitRange,Colon,Vector{CartesianIndex{0}}}}) 
+function Base.getindex(a::LazyTensor,
+                       I::Vararg{Union{<:AbstractUnitRange,Colon,Vector{CartesianIndex{0}}}})
     return LazyTensor(view(a.dat, I...))
 end
 Base.setindex!(a::LazyTensor, value, i...) = setindex!(a.dat, value, i...)
@@ -27,7 +28,7 @@ struct LazyTensorStyle <: Base.Broadcast.BroadcastStyle end
 
 Base.BroadcastStyle(::Type{<:LazyTensor}) = LazyTensorStyle()
 
-Base.BroadcastStyle(::LazyTensorStyle, ::Broadcast.BroadcastStyle) = LazyTensorStyle() 
+Base.BroadcastStyle(::LazyTensorStyle, ::Broadcast.BroadcastStyle) = LazyTensorStyle()
 
 Base.materialize(bc::Broadcast.Broadcasted{LazyTensorStyle}) = BroadcastArray(unwrap(bc))
 
@@ -43,7 +44,7 @@ end
 unwrap(x) = x
 unwrap(a::LazyTensor) = a.dat
 
-struct BroadcastArray{T,N,B <: Base.AbstractBroadcasted} <: AbstractArray{T,N}  
+struct BroadcastArray{T,N,B<:Base.AbstractBroadcasted} <: AbstractArray{T,N}
     bc::B
 end
 
@@ -59,7 +60,8 @@ function BroadcastArray(g::Base.Generator)
 end
 
 Base.getindex(b::BroadcastArray, i...) = b.bc[i...]
-function Base.getindex(a::BroadcastArray, I::Vararg{Union{<:AbstractUnitRange,Colon,Vector{CartesianIndex{0}}}}) 
+function Base.getindex(a::BroadcastArray,
+                       I::Vararg{Union{<:AbstractUnitRange,Colon,Vector{CartesianIndex{0}}}})
     return view(a, I...)
 end
 Base.size(b::BroadcastArray) = size(b.bc)
