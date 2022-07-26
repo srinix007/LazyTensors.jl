@@ -1,4 +1,4 @@
-name = "ParallelArrays"
+name = "LazyTensors"
 uuid = "862b1c87-f07d-406f-9f31-85f9a7d9607f"
 authors = ["srinix <srinix@protonmail.com> and contributors"]
 version = "0.1.0"

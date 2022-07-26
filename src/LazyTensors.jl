@@ -1,9 +1,9 @@
-module ParallelArrays
+module LazyTensors
 
 using GPUArrays
 
 export LazyTensor, BroadcastArray, unwrap, LazyTensorStyle, pev, ev, reduce, reduce!, sum!,
-       prod!, tsum, tprod, tsum!, tprod!, treduce!, treduce, halve_dims, halve
+    prod!, tsum, tprod, tsum!, tprod!, treduce!, treduce, halve_dims, halve
 
 struct LazyTensor{T,N,A<:AbstractArray{T,N}} <: DenseArray{T,N}
     dat::A
@@ -17,7 +17,7 @@ Base.parent(a::LazyTensor) = a.dat
 Base.size(a::LazyTensor) = size(a.dat)
 Base.getindex(a::LazyTensor, i...) = LazyTensor(a.dat[i...])
 function Base.getindex(a::LazyTensor,
-                       I::Vararg{Union{<:AbstractUnitRange,Colon,Vector{CartesianIndex{0}}}})
+    I::Vararg{Union{<:AbstractUnitRange,Colon,Vector{CartesianIndex{0}}}})
     return LazyTensor(view(a.dat, I...))
 end
 Base.setindex!(a::LazyTensor, value, i...) = setindex!(a.dat, value, i...)
@@ -61,7 +61,7 @@ end
 
 Base.getindex(b::BroadcastArray, i...) = b.bc[i...]
 function Base.getindex(a::BroadcastArray,
-                       I::Vararg{Union{<:AbstractUnitRange,Colon,Vector{CartesianIndex{0}}}})
+    I::Vararg{Union{<:AbstractUnitRange,Colon,Vector{CartesianIndex{0}}}})
     return view(a, I...)
 end
 Base.size(b::BroadcastArray) = size(b.bc)
