@@ -13,30 +13,30 @@ using GPUArrays
 
 @inline treduce(op, A::AbstractGPUArray, dims) = reduce(op, A, dims=dims)
 @inline treduce(op,
-                A::BroadcastArray{T,N,<:Broadcast.Broadcasted{<:AbstractGPUArrayStyle}},
-                dims) where {T,N} = reduce(op, A.bc, dims=dims)
+    A::BroadcastArray{T,N,<:Broadcast.Broadcasted{<:AbstractGPUArrayStyle}},
+    dims) where {T,N} = reduce(op, A.bc, dims=dims)
 
 @inline threaded_reduce(op, A::AbstractGPUArray) = reduce(op, A)
 @inline threaded_reduce(op,
     A::BroadcastArray{T,N,<:Broadcast.Broadcasted{<:AbstractGPUArrayStyle}}) where {T,N} = reduce(op, A.bc)
 
-function Base.sum!(R::AbstractGPUArray, 
-              A::BroadcastArray{T,N,<:Broadcast.Broadcasted{<:AbstractGPUArrayStyle}}, dims) where {T,N}
+function Base.sum!(R::AbstractGPUArray,
+    A::BroadcastArray{T,N,<:Broadcast.Broadcasted{<:AbstractGPUArrayStyle}}, dims) where {T,N}
     Rs = reshape(R, Base.reduced_indices(A, dims))
-    sum!(Rs, A.bc)
+    Base.mapreducedim!(identity, +, Rs, A.bc)
     return nothing
 end
 
 function Base.sum!(R::AbstractGPUArray, A::AbstractGPUArray, dims)
     Rs = reshape(R, Base.reduced_indices(A, dims))
-    sum!(Rs, A)
+    Base.sum!(Rs, A)
     return nothing
 end
 
 function Base.prod!(R::AbstractGPUArray,
-               A::BroadcastArray{T,N,<:Broadcast.Broadcasted{<:AbstractGPUArrayStyle}}, dims) where {T,N}
+    A::BroadcastArray{T,N,<:Broadcast.Broadcasted{<:AbstractGPUArrayStyle}}, dims) where {T,N}
     Rs = reshape(R, Base.reduced_indices(A, dims))
-    prod!(Rs, A.bc)
+    Base.mapreducedim!(identity, *, Rs, A.bc)
     return nothing
 end
 
